@@ -1,0 +1,13 @@
+appdirs==1.4.3
+asyncio==3.4.3
+beautifulsoup4==4.8.2
+certifi==2019.11.28
+chardet==3.0.4
+idna==2.9
+pyee==7.0.1
+pyppeteer==0.0.25
+requests==2.23.0
+soupsieve==2.0
+tqdm==4.43.0
+urllib3==1.25.8
+websockets==8.1

@@ -17,7 +17,7 @@ def main():
 async def get_html(url):
     browser = await launch()
     page = await browser.newPage()
-    await page.goto('http://bankrot.fedresurs.ru')
+    await page.goto(url)
     print('Loading page...')
     await page.waitFor(5000)
     # await page.screenshot({'path': 'example.png'})

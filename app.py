@@ -10,7 +10,7 @@ base_url = 'http://bankrot.fedresurs.ru/'
 def main():
     db = LinkDB()
     # db.insert('hlkgsdkgjksd')
-    # db.getAll()
+    # db.get_all()
     # db.create_web()
     # return
     html = asyncio.get_event_loop().run_until_complete(get_html(base_url, 5000))

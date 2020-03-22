@@ -12,12 +12,12 @@ class LinkDB:
         self.cursor.execute("INSERT INTO links VALUES (?, ?)", (link, datetime.datetime.now()))
         self.conn.commit()
 
-    def getAll(self):
+    def get_all(self):
         self.cursor.execute("SELECT * FROM links")
         print(self.cursor.fetchall())
 
     def create_web(self):
-        self.cursor.execute("SELECT DISTINCT link FROM links")
+        self.cursor.execute("SELECT DISTINCT link FROM links ORDER BY timestamp DESC")
         links = self.cursor.fetchall()
 
         file = open('links.html', 'w')

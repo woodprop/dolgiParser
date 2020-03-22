@@ -2,12 +2,17 @@ from bs4 import BeautifulSoup
 import re
 import asyncio
 from pyppeteer import launch
-
+from db import LinkDB
 
 base_url = 'http://bankrot.fedresurs.ru/'
 
 
 def main():
+    db = LinkDB()
+    # db.insert('hlkgsdkgjksd')
+    # db.get_all()
+    # db.create_web()
+    # return
     html = asyncio.get_event_loop().run_until_complete(get_html(base_url, 5000))
     links = get_info(html)
     if not links:
@@ -16,8 +21,12 @@ def main():
 
     for link in links:
         print(link)
-        if check_link(link, 'Васенко'):
+        if check_link(link, 'номер'):
             print('YES')
+            db.insert(link)
+
+    db.create_web()
+
 
 
 
@@ -38,7 +47,7 @@ def get_info(page):
     data = []
     soup = BeautifulSoup(page, 'html.parser')
 
-    links = soup.find_all('a', text=re.compile("Уведомление"))    # Ключевая фраза
+    links = soup.find_all('a', text=re.compile("Сообщение"))    # Ключевая фраза
 
     if links:
         for l in links:

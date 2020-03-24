@@ -8,6 +8,7 @@ base_url = 'http://bankrot.fedresurs.ru/'
 base_url_mes = 'https://bankrot.fedresurs.ru/Messages.aspx'
 
 def main():
+    keywords = ['здание', 'помещение', 'квартира']
     html = asyncio.get_event_loop().run_until_complete(get_search_result_page(base_url_mes, 3000))
     # return
     db = LinkDB()
@@ -23,11 +24,11 @@ def main():
 
     for link in links:
         print(link)
-        if check_link(link, 'квартира'):
-            print('YES')
+        if check_link(link, keywords):
             db.insert(link)
 
     # ---------- Сборка веб-страницы ----------
+    print('Создание страницы со ссылками...')
     db.create_web()
 
 # -------------------------------------------------------------------------------------------------------------------
@@ -105,25 +106,20 @@ def get_info(page):
     return data
 
 
-def check_link(link, keyword):
+# ---------- Проверка ссылки на наличие ключевых слов ----------
+def check_link(link, keywords):
     html = asyncio.get_event_loop().run_until_complete(get_html(link, 2000))
     soup = BeautifulSoup(html, 'html.parser')
     lot_text = soup.find('div', class_='msg')
- #   return keyword in lot_text.text
     # ToDo облагородить алгоритм поиска
-    if 'здание' in lot_text.text:
-        print('здание')
-        return True
 
-    if 'помещение' in lot_text.text:
-        print('помещение')
-        return True
+    for kw in keywords:
+        if kw in soup.text:
+            print('Найдено: {}'.format(kw))
+            return True
 
-    if 'квартира' in lot_text.text:
-        print('квартира')
-        return True
-
-
+    return False
+# ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 if __name__ == '__main__':
     main()

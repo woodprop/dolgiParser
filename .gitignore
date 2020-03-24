@@ -3,3 +3,4 @@ venv
 __pycache__
 linkDatabase.db
 links.html
+example.png

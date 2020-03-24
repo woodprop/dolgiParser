@@ -111,11 +111,13 @@ def check_link(link, keywords):
     html = asyncio.get_event_loop().run_until_complete(get_html(link, 2000))
     soup = BeautifulSoup(html, 'html.parser')
     lot_text = soup.find('div', class_='msg')
-    # ToDo облагородить алгоритм поиска
 
     for kw in keywords:
         if kw in soup.text:
             print('Найдено: {}'.format(kw))
+            snils = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(6) > tbody > tr:nth-child(6) > td:nth-child(2)')
+            if snils:
+                print('СНИЛС: {}'.format(snils.text))
             return True
 
     return False

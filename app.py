@@ -17,7 +17,10 @@ def main():
     # db.create_web()
     # return
     # html = asyncio.get_event_loop().run_until_complete(get_html(base_url_mes, 2000))
-    links = get_info(html)
+    data = get_info(html)
+    links = data['links']
+    debtors = data['debtors']
+
     if not links:
         print('No links in response...')
         return
@@ -94,15 +97,22 @@ async def get_html(url, delay):
 
 
 def get_info(page):
-    data = []
+    data = {'links': [], 'debtors': []}
+
     soup = BeautifulSoup(page, 'html.parser')
+
     links = soup.find_all('a', text=re.compile("Объявление о проведении торгов"))    # Ключевая фраза
 
     if links:
         for l in links:
+            debtor_link = l.parent.nextSibling.find('a')
+            debtor = {'name': debtor_link.text.strip(), 'link': debtor_link['href']}
+            print('Должник: {} | Ссылка: {}'.format(debtor['name'], debtor['link']))
+
             rawlink = l['onclick']
             link = base_url.replace('/', '') + rawlink.split('\'')[1]   # ппц, но пока пусть так
-            data.append(link)
+            data['links'].append(link)
+            data['debtors'].append(debtor)
     return data
 
 
@@ -114,14 +124,15 @@ def check_link(link, keywords):
 
     for kw in keywords:
         if kw in soup.text:
-            print('Найдено: {}'.format(kw))
-            snils = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(6) > tbody > tr:nth-child(6) > td:nth-child(2)')
-            if snils:
-                print('СНИЛС: {}'.format(snils.text))
+            print('\033[92m' + 'Найдено: {}'.format(kw) + '\033[0m')
+            # snils = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(6) > tbody > tr:nth-child(6) > td:nth-child(2)')
+            # if snils:
+            #     print('СНИЛС: {}'.format(snils.text))
             return True
 
     return False
 # ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 if __name__ == '__main__':
     main()

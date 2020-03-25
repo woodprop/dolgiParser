@@ -1,5 +1,6 @@
 import sqlite3
 import datetime
+from textwrap import shorten
 
 
 class LinkDB:
@@ -36,11 +37,22 @@ class LinkDB:
         print(self.cursor.fetchall())
 
     def create_web(self):
-        self.cursor.execute("SELECT DISTINCT link, timestamp FROM links ORDER BY timestamp DESC")
-        links = self.cursor.fetchall()
+        self.cursor.execute("SELECT DISTINCT lots.link, description, debtors.name, debtors.link FROM lots JOIN debtors ON lots.inn = debtors.id")
+        res = self.cursor.fetchall()
+        # print(res[0][3])
+        # return
+        file = open('links.html', 'w', encoding='utf8')
+        for lot in res:
+            file.write('<div>' + '\n')
+            lot_link = """<a href="{}">{}</a>""".format(lot[0], lot[0])
+            sepatator = '<span> - </span>'
+            lot_debtor = """<a href="{}">{}</a>""".format(lot[3], lot[2])
+            lot_desc = """<p>{}</p>""".format(shorten(lot[1], width=1000, placeholder='...'))
 
-        file = open('links.html', 'w')
-        for link in links:
-            tag = """<a href="{}" style="display: block">{}</a>""".format(link[0], link[1])
-            file.write(tag + '\n')
+            file.write(lot_link + '\n')
+            file.write(sepatator + '\n')
+            file.write(lot_debtor + '\n')
+            file.write(lot_desc + '\n')
+            file.write('</div>' + '\n')
+            file.write('<hr>' + '\n')
         file.close()

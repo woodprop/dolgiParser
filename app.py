@@ -4,7 +4,7 @@ import asyncio
 from pyppeteer import launch
 from db import LinkDB
 
-base_url = 'http://bankrot.fedresurs.ru/'
+base_url = 'http://bankrot.fedresurs.ru'
 base_url_mes = 'https://bankrot.fedresurs.ru/Messages.aspx'
 
 def main():

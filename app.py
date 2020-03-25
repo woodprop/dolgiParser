@@ -22,17 +22,20 @@ def main():
     debtors = data['debtors']
 
     # ********************
-    if debtors:
-        for d in debtors:
-            # print(d['name'], d['link'])
-            d.update(get_debtor_info(d))
-            if 'Organization' in d['link']:
-                d['type'] = 'company'
-            else:
-                d['type'] = 'person'
+    if not debtors:
+        print('Должники не найдены...')
+        return
 
-            db.add_debtor(d)
-            print(d)
+    for d in debtors:
+        # print(d['name'], d['link'])
+        d.update(get_debtor_info(d))
+        if 'Organization' in d['link']:
+            d['type'] = 'company'
+        else:
+            d['type'] = 'person'
+
+        db.add_debtor(d)
+        print(d)
 
     return
     # ********************

@@ -21,11 +21,22 @@ def main():
     links = data['links']
     debtors = data['debtors']
 
-    # ********************
+    if not links:
+        print('No links in response...')
+        return
+
+    print('\033[92m' + 'Начало проверки лотов...' + '\033[0m')
+    for link in links:
+        # print(link)
+        lot = get_lot_info(link, keywords)
+        if lot:
+            db.add_lot(lot)
+
     if not debtors:
         print('Должники не найдены...')
         return
 
+    print('\033[92m' + 'Внесение должников в базу...' + '\033[0m')
     for d in debtors:
         # print(d['name'], d['link'])
         d.update(get_debtor_info(d))
@@ -35,19 +46,8 @@ def main():
             d['type'] = 'person'
 
         db.add_debtor(d)
-        print(d)
 
-    return
-    # ********************
-
-    if not links:
-        print('No links in response...')
-        return
-
-    for link in links:
-        print(link)
-        if check_link(link, keywords):
-            db.insert(link)
+    return  # Страницу пока не делаем TODO
 
     # ---------- Сборка веб-страницы ----------
     print('Создание страницы со ссылками...')
@@ -117,11 +117,52 @@ async def get_html(url, delay):
 
 def get_debtor_info(debtor):
     data = {}
-    html = asyncio.get_event_loop().run_until_complete(get_html(base_url + debtor['link'], 3000))
+    html = asyncio.get_event_loop().run_until_complete(get_html(debtor['link'], 3000))
     soup = BeautifulSoup(html, 'html.parser')
     inn = soup.find('span', id='ctl00_cphBody_lblINN').text
     data['inn'] = inn
     return data
+
+
+def get_lot_info(link, keywords):
+    html = asyncio.get_event_loop().run_until_complete(get_html(link, 2000))
+    soup = BeautifulSoup(html, 'html.parser')
+    lot_data = {}
+    if '(изменено)' in soup.select_one('h1').text:
+        print('Лот неактуальный')
+        return False
+    for kw in keywords:
+        if kw in soup.text:
+            print('\033[92m' + 'Найдено: {}'.format(kw) + '\033[0m')
+
+            if 'ФИО' in soup.text:
+                lot_data['inn'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(6) > tbody > tr:nth-child(5) > td:nth-child(2)').text.strip()
+                lot_data['date_pub'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.odd > td:nth-child(2)').text.strip()
+                lot_data['lot_number'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.even > td:nth-child(2)').text.strip()
+                # lot_data['type'] = soup.select_one('').text.strip()
+                # lot_data['address'] = soup.select_one('').text.strip()
+            else:
+                lot_data['inn'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(6) > tbody > tr:nth-child(4) > td:nth-child(2)').text.strip()
+                lot_data['date_pub'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.odd > td:nth-child(2)').text.strip()
+                lot_data['lot_number'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.even > td:nth-child(2)').text.strip()
+                # lot_data['type'] = soup.select_one('').text.strip()
+                # lot_data['address'] = soup.select_one('').text.strip()
+            lot_data['type'] = ''
+            lot_data['address'] = ''
+            lot_data['description'] = soup.select('div.msg')[-2].text.strip()
+            lot_data['start_price'] = soup.select_one('table.lotInfo > tbody > tr.odd > td:nth-child(3)').text.strip()
+            lot_data['auction_type'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(14) > tbody > tr:nth-child(1) > td:nth-child(2)').text.strip()
+            lot_data['date_start'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(14) > tbody > tr:nth-child(2) > td:nth-child(2)').text.strip()
+            try:
+                lot_data['place'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(14) > tbody > tr:nth-child(7) > td:nth-child(2)').text.strip()
+            except:
+                lot_data['place'] = ''
+            lot_data['link'] = link
+
+            return lot_data
+
+    return False
+
 
 def get_info(page):
     data = {'links': [], 'debtors': []}
@@ -133,8 +174,8 @@ def get_info(page):
     if links:
         for l in links:
             debtor_link = l.parent.nextSibling.find('a')
-            debtor = {'name': debtor_link.text.strip(), 'link': debtor_link['href']}
-            print('Должник: {} | Ссылка: {}'.format(debtor['name'], debtor['link']))
+            debtor = {'name': debtor_link.text.strip(), 'link': base_url + debtor_link['href']}
+            # print('Должник: {} | Ссылка: {}'.format(debtor['name'], debtor['link']))
 
             rawlink = l['onclick']
             link = base_url.replace('/', '') + rawlink.split('\'')[1]   # ппц, но пока пусть так
@@ -143,7 +184,7 @@ def get_info(page):
     return data
 
 
-# ---------- Проверка ссылки на наличие ключевых слов ----------
+# ---------- НЕ ИСПОЛЬЗУЕТСЯ!!!!!!! Проверка ссылки на наличие ключевых слов ToDO удалить в конце проекта ----------
 def check_link(link, keywords):
     html = asyncio.get_event_loop().run_until_complete(get_html(link, 2000))
     soup = BeautifulSoup(html, 'html.parser')
@@ -155,7 +196,7 @@ def check_link(link, keywords):
             # snils = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(6) > tbody > tr:nth-child(6) > td:nth-child(2)')
             # if snils:
             #     print('СНИЛС: {}'.format(snils.text))
-            return True
+            return html
 
     return False
 # ///////////////////////////////////////////////////////////////////////////////////////////////////////

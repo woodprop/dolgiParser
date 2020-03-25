@@ -7,12 +7,23 @@ class LinkDB:
         self.conn = sqlite3.connect('Database.db')
         self.cursor = self.conn.cursor()
         self.cursor.execute("""CREATE TABLE IF NOT EXISTS debtors (id VARCHAR(16) NOT NULL, name VARCHAR(255), type VARCHAR(16), link VARCHAR(255), PRIMARY KEY (id))""")
+        self.cursor.execute("""CREATE TABLE IF NOT EXISTS lots (id INTEGER PRIMARY KEY AUTOINCREMENT, inn VARCHAR(16), date_pub VARCHAR(16), lot_number VARCHAR(16) UNIQUE, type VARCHAR(16), description TEXT, address TINYTEXT, start_price VARCHAR(32), auction_type VARCHAR(32), date_start VARCHAR(16), place VARCHAR(32), link VARCHAR(255))""")
 
 
     def add_debtor(self, debtor):
         try:
             self.cursor.execute("INSERT INTO debtors (name, link, id, type) VALUES (?, ?, ?, ?)", (debtor['name'], debtor['link'], debtor['inn'], debtor['type']))
             self.conn.commit()
+            print('\033[92m' + 'Должник внесён в базу' + '\033[0m')
+        except:
+            print('\033[91m' + 'Запись не добавлена, скорее всего, она уже существует...' + '\033[0m')
+
+    def add_lot(self, lot):
+        try:
+            self.cursor.execute("INSERT INTO lots (inn, date_pub, lot_number, type, description, address, start_price, auction_type, date_start, place, link) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                                (lot['inn'], lot['date_pub'], lot['lot_number'], lot['type'], lot['description'], lot['address'], lot['start_price'], lot['auction_type'], lot['date_start'], lot['place'], lot['link']))
+            self.conn.commit()
+            print('\033[92m' + 'Лот внесён в базу' + '\033[0m')
         except:
             print('\033[91m' + 'Запись не добавлена, скорее всего, она уже существует...' + '\033[0m')
 

@@ -1,6 +1,6 @@
 .idea
 venv
 __pycache__
-linkDatabase.db
+Database.db
 links.html
 example.png

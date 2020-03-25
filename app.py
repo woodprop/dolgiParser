@@ -21,6 +21,22 @@ def main():
     links = data['links']
     debtors = data['debtors']
 
+    # ********************
+    if debtors:
+        for d in debtors:
+            # print(d['name'], d['link'])
+            d.update(get_debtor_info(d))
+            if 'Organization' in d['link']:
+                d['type'] = 'company'
+            else:
+                d['type'] = 'person'
+
+            db.add_debtor(d)
+            print(d)
+
+    return
+    # ********************
+
     if not links:
         print('No links in response...')
         return
@@ -89,12 +105,20 @@ async def get_html(url, delay):
     await page.goto(url)
     print('Loading page...')
     await page.waitFor(delay)
-    # await page.screenshot({'path': 'example.png'})
+    await page.screenshot({'path': 'example.png'})
     html = await page.content()
     await browser.close()
     return html
 # ////////////////////////////////////////////////////////
 
+
+def get_debtor_info(debtor):
+    data = {}
+    html = asyncio.get_event_loop().run_until_complete(get_html(base_url + debtor['link'], 3000))
+    soup = BeautifulSoup(html, 'html.parser')
+    inn = soup.find('span', id='ctl00_cphBody_lblINN').text
+    data['inn'] = inn
+    return data
 
 def get_info(page):
     data = {'links': [], 'debtors': []}

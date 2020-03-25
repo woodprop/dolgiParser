@@ -4,9 +4,14 @@ import datetime
 
 class LinkDB:
     def __init__(self):
-        self.conn = sqlite3.connect('linkDatabase.db')
+        self.conn = sqlite3.connect('Database.db')
         self.cursor = self.conn.cursor()
-        self.cursor.execute("""CREATE TABLE IF NOT EXISTS links (link, timestamp)""")
+        self.cursor.execute("""CREATE TABLE IF NOT EXISTS debtors (id VARCHAR(16), name VARCHAR(255), type VARCHAR(16), link VARCHAR(255))""")
+
+
+    def add_debtor(self, debtor):
+        self.cursor.execute("INSERT INTO debtors (name, link, id, type) VALUES (?, ?, ?, ?)", (debtor['name'], debtor['link'], debtor['inn'], debtor['type']))
+        self.conn.commit()
 
     def insert(self, link):
         self.cursor.execute("INSERT INTO links VALUES (?, ?)", (link, datetime.datetime.now()))

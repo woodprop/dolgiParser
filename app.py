@@ -83,13 +83,13 @@ async def get_search_result_page(url, delay):
     await page.keyboard.down('Control')
     await page.keyboard.press('KeyA')
     await page.keyboard.up('Control')
-    await page.type('input[id="ctl00_cphBody_cldrBeginDate_tbSelectedDate"]', '26.03.2020')
+    await page.type('input[id="ctl00_cphBody_cldrBeginDate_tbSelectedDate"]', '22.03.2020')
 
     await page.click('input[id="ctl00_cphBody_cldrEndDate_tbSelectedDate"]')
     await page.keyboard.down('Control')
     await page.keyboard.press('KeyA')
     await page.keyboard.up('Control')
-    await page.type('input[id="ctl00_cphBody_cldrEndDate_tbSelectedDate"]', '26.03.2020')
+    await page.type('input[id="ctl00_cphBody_cldrEndDate_tbSelectedDate"]', '22.03.2020')
 
     await page.keyboard.press('Enter')
     print('Поиск...')
@@ -126,14 +126,21 @@ def get_debtor_info(debtor):
 
 
 def get_lot_info(link, keywords):
+    print(link)
     html = asyncio.get_event_loop().run_until_complete(get_html(link, 2000))
     soup = BeautifulSoup(html, 'html.parser')
+    try:
+        lot_table = soup.select_one('table.lotInfo').text
+    except:
+        print('\033[91m' + 'Пустой лот!...' + '\033[0m')
+        return False
+
     lot_data = {}
     if '(изменено)' in soup.select_one('h1').text:
         print('Лот неактуальный')
         return False
     for kw in keywords:
-        if kw in soup.text:
+        if kw in lot_table:
             print('\033[92m' + 'Найдено: {}'.format(kw) + '\033[0m')
 
             if 'ФИО' in soup.text:

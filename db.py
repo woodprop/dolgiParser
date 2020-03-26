@@ -8,7 +8,7 @@ class LinkDB:
         self.conn = sqlite3.connect('Database.db')
         self.cursor = self.conn.cursor()
         self.cursor.execute("""CREATE TABLE IF NOT EXISTS debtors (id VARCHAR(16) NOT NULL, name VARCHAR(255), type VARCHAR(16), link VARCHAR(255), PRIMARY KEY (id))""")
-        self.cursor.execute("""CREATE TABLE IF NOT EXISTS lots (id INTEGER PRIMARY KEY AUTOINCREMENT, inn VARCHAR(16), date_pub VARCHAR(16), lot_number VARCHAR(16) UNIQUE, type VARCHAR(16), description TEXT, address TINYTEXT, start_price VARCHAR(32), auction_type VARCHAR(32), date_start VARCHAR(16), place VARCHAR(32), link VARCHAR(255))""")
+        self.cursor.execute("""CREATE TABLE IF NOT EXISTS lots (id INTEGER PRIMARY KEY AUTOINCREMENT, inn VARCHAR(16), date_pub VARCHAR(16), lot_number VARCHAR(16) UNIQUE, type VARCHAR(16), description TEXT, address TINYTEXT, start_price INT, auction_type VARCHAR(32), date_start VARCHAR(16), place VARCHAR(32), link VARCHAR(255))""")
 
 
     def add_debtor(self, debtor):

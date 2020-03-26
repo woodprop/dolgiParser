@@ -47,7 +47,7 @@ def main():
 
         db.add_debtor(d)
 
-    return  # Страницу пока не делаем TODO
+    # return  # Страницу пока не делаем TODO
 
     # ---------- Сборка веб-страницы ----------
     print('Создание страницы со ссылками...')
@@ -83,13 +83,13 @@ async def get_search_result_page(url, delay):
     await page.keyboard.down('Control')
     await page.keyboard.press('KeyA')
     await page.keyboard.up('Control')
-    await page.type('input[id="ctl00_cphBody_cldrBeginDate_tbSelectedDate"]', '01.03.2020')
+    await page.type('input[id="ctl00_cphBody_cldrBeginDate_tbSelectedDate"]', '26.03.2020')
 
     await page.click('input[id="ctl00_cphBody_cldrEndDate_tbSelectedDate"]')
     await page.keyboard.down('Control')
     await page.keyboard.press('KeyA')
     await page.keyboard.up('Control')
-    await page.type('input[id="ctl00_cphBody_cldrEndDate_tbSelectedDate"]', '01.03.2020')
+    await page.type('input[id="ctl00_cphBody_cldrEndDate_tbSelectedDate"]', '26.03.2020')
 
     await page.keyboard.press('Enter')
     print('Поиск...')
@@ -101,13 +101,14 @@ async def get_search_result_page(url, delay):
     return html
 
 
-# >>>>>>>>>> Не используется, но пока храним <<<<<<<<<<
+# -------------------------------------------------------------
 async def get_html(url, delay):
     browser = await launch()
     page = await browser.newPage()
     await page.goto(url)
     print('Loading page...')
-    await page.waitFor(delay)
+    await page.waitForSelector('table')
+    # await page.waitFor(delay)
     await page.screenshot({'path': 'example.png'})
     html = await page.content()
     await browser.close()
@@ -150,7 +151,7 @@ def get_lot_info(link, keywords):
             lot_data['type'] = ''
             lot_data['address'] = ''
             lot_data['description'] = soup.select('div.msg')[-2].text.strip()
-            lot_data['start_price'] = soup.select_one('table.lotInfo > tbody > tr.odd > td:nth-child(3)').text.strip()
+            lot_data['start_price'] = int(soup.select_one('table.lotInfo > tbody > tr.odd > td:nth-child(3)').text.strip().split(',')[0].replace(' ', ''))
             lot_data['auction_type'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(14) > tbody > tr:nth-child(1) > td:nth-child(2)').text.strip()
             lot_data['date_start'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(14) > tbody > tr:nth-child(2) > td:nth-child(2)').text.strip()
             try:

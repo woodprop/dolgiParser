@@ -25,12 +25,12 @@ def main():
         print('No links in response...')
         return
 
-    print('\033[92m' + 'Начало проверки лотов...' + '\033[0m')
+    print('\033[92m' + 'Начало проверки сообщений...' + '\033[0m')
     for link in links:
         # print(link)
-        lot = get_lot_info(link, keywords)
-        if lot:
-            db.add_message(lot)
+        message = get_message_info(link, keywords)
+        if message:
+            db.add_message(message)
 
     if not debtors:
         print('Должники не найдены...')
@@ -125,7 +125,7 @@ def get_debtor_info(debtor):
     return data
 
 
-def get_lot_info(link, keywords):
+def get_message_info(link, keywords):
     print(link)
     html = asyncio.get_event_loop().run_until_complete(get_html(link, 2000))
     soup = BeautifulSoup(html, 'html.parser')
@@ -135,7 +135,7 @@ def get_lot_info(link, keywords):
         print('\033[91m' + 'Пустой лот!...' + '\033[0m')
         return False
 
-    lot_data = {}
+    message_data = {}
     if '(изменено)' in soup.select_one('h1').text:
         print('Лот неактуальный')
         return False
@@ -144,21 +144,21 @@ def get_lot_info(link, keywords):
             print('\033[92m' + 'Найдено: {}'.format(kw) + '\033[0m')
 
             if 'ФИО' in soup.text:
-                lot_data['inn'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(6) > tbody > tr:nth-child(5) > td:nth-child(2)').text.strip()
-                lot_data['date_pub'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.odd > td:nth-child(2)').text.strip()
-                lot_data['lot_number'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.even > td:nth-child(2)').text.strip()
-                # lot_data['type'] = soup.select_one('').text.strip()
-                # lot_data['address'] = soup.select_one('').text.strip()
+                message_data['inn'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(6) > tbody > tr:nth-child(5) > td:nth-child(2)').text.strip()
+                message_data['date_pub'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.odd > td:nth-child(2)').text.strip()
+                message_data['message_number'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.even > td:nth-child(2)').text.strip()
+                # message_data['type'] = soup.select_one('').text.strip()
+                # message_data['address'] = soup.select_one('').text.strip()
             else:
-                lot_data['inn'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(6) > tbody > tr:nth-child(4) > td:nth-child(2)').text.strip()
-                lot_data['date_pub'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.odd > td:nth-child(2)').text.strip()
-                lot_data['lot_number'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.even > td:nth-child(2)').text.strip()
-                # lot_data['type'] = soup.select_one('').text.strip()
-                # lot_data['address'] = soup.select_one('').text.strip()
-            lot_data['type'] = ''
-            lot_data['address'] = ''
-            lot_data['description'] = soup.select_one('.lotInfo > tbody:nth-child(1) > tr:nth-child(2) > td:nth-child(2)').text.strip()
-            # print(lot_data['description'])
+                message_data['inn'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(6) > tbody > tr:nth-child(4) > td:nth-child(2)').text.strip()
+                message_data['date_pub'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.odd > td:nth-child(2)').text.strip()
+                message_data['message_number'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.even > td:nth-child(2)').text.strip()
+                # message_data['type'] = soup.select_one('').text.strip()
+                # message_data['address'] = soup.select_one('').text.strip()
+            message_data['type'] = ''
+            message_data['address'] = ''
+            message_data['description'] = soup.select_one('.lotInfo > tbody:nth-child(1) > tr:nth-child(2) > td:nth-child(2)').text.strip()
+            # print(message_data['description'])
 
             # rows = soup.select('.lotInfo > tbody:nth-child(1) > tr')
             # for r in rows:
@@ -174,16 +174,16 @@ def get_lot_info(link, keywords):
 
 
 
-            lot_data['start_price'] = int(soup.select_one('table.lotInfo > tbody > tr.odd > td:nth-child(3)').text.strip().split(',')[0].replace(' ', ''))
-            lot_data['auction_type'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(14) > tbody > tr:nth-child(1) > td:nth-child(2)').text.strip()
-            lot_data['date_start'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(14) > tbody > tr:nth-child(2) > td:nth-child(2)').text.strip()
+            # lot_data['start_price'] = int(soup.select_one('table.lotInfo > tbody > tr.odd > td:nth-child(3)').text.strip().split(',')[0].replace(' ', ''))
+            message_data['auction_type'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(14) > tbody > tr:nth-child(1) > td:nth-child(2)').text.strip()
+            message_data['date_start'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(14) > tbody > tr:nth-child(2) > td:nth-child(2)').text.strip()
             try:
-                lot_data['place'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(14) > tbody > tr:nth-child(7) > td:nth-child(2)').text.strip()
+                message_data['place'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(14) > tbody > tr:nth-child(7) > td:nth-child(2)').text.strip()
             except:
-                lot_data['place'] = ''
-            lot_data['link'] = link
+                message_data['place'] = ''
+            message_data['link'] = link
 
-            return lot_data
+            return message_data
 
     return False
 

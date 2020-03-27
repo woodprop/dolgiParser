@@ -9,8 +9,7 @@ class LinkDB:
         self.cursor = self.conn.cursor()
         self.cursor.execute("""CREATE TABLE IF NOT EXISTS debtors (id VARCHAR(16) NOT NULL, name VARCHAR(255), type VARCHAR(16), link VARCHAR(255), PRIMARY KEY (id))""")
         self.cursor.execute("""CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, inn VARCHAR(16), date_pub VARCHAR(16), message_number VARCHAR(16) UNIQUE, description TEXT, auction_type VARCHAR(32), date_start VARCHAR(16), place VARCHAR(32), link VARCHAR(255))""")
-        self.cursor.execute("""CREATE TABLE IF NOT EXISTS lots (id INTEGER PRIMARY KEY AUTOINCREMENT, message_number VARCHAR(16) UNIQUE, description TEXT, address TINYTEXT, type VARCHAR(16), start_price INT)""")
-
+        self.cursor.execute("""CREATE TABLE IF NOT EXISTS lots (id INTEGER PRIMARY KEY AUTOINCREMENT, message_number VARCHAR(16), description TEXT, address TINYTEXT, type VARCHAR(16), start_price INT)""")
 
     def add_debtor(self, debtor):
         try:
@@ -26,18 +25,22 @@ class LinkDB:
                                 (message['inn'], message['date_pub'], message['message_number'], message['description'], message['auction_type'], message['date_start'], message['place'], message['link']))
             self.conn.commit()
             print('\033[92m' + 'Сообщение внесено в базу' + '\033[0m')
+            for lot in message['lots']:
+                print(lot)
+                self.add_lot(lot)
         except:
             print('\033[91m' + 'Запись не добавлена, скорее всего, она уже существует...' + '\033[0m')
 
+
+
     def add_lot(self, lot):
         try:
-            self.cursor.execute("INSERT INTO lot (message_number, description, type, start_price) VALUES (?, ?, ?, ?)",
+            self.cursor.execute("INSERT INTO lots (message_number, description, type, start_price) VALUES (?, ?, ?, ?)",
                                 (lot['message_number'], lot['description'], lot['type'], lot['start_price']))
             self.conn.commit()
             print('\033[92m' + 'Лот внесён в базу' + '\033[0m')
         except:
             print('\033[91m' + 'Запись не добавлена, скорее всего, она уже существует...' + '\033[0m')
-
 
     def insert(self, link):
         self.cursor.execute("INSERT INTO links VALUES (?, ?)", (link, datetime.datetime.now()))

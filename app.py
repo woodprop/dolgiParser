@@ -135,57 +135,62 @@ def get_message_info(link, keywords):
         print('\033[91m' + 'Пустой лот!...' + '\033[0m')
         return False
 
-    message_data = {}
+    message_data = {'lots': []}
     if '(изменено)' in soup.select_one('h1').text:
         print('Лот неактуальный')
         return False
+
     for kw in keywords:
-        if kw in lot_table:
-            print('\033[92m' + 'Найдено: {}'.format(kw) + '\033[0m')
+        if kw not in lot_table:
+            continue
 
-            if 'ФИО' in soup.text:
-                message_data['inn'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(6) > tbody > tr:nth-child(5) > td:nth-child(2)').text.strip()
-                message_data['date_pub'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.odd > td:nth-child(2)').text.strip()
-                message_data['message_number'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.even > td:nth-child(2)').text.strip()
-                # message_data['type'] = soup.select_one('').text.strip()
-                # message_data['address'] = soup.select_one('').text.strip()
-            else:
-                message_data['inn'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(6) > tbody > tr:nth-child(4) > td:nth-child(2)').text.strip()
-                message_data['date_pub'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.odd > td:nth-child(2)').text.strip()
-                message_data['message_number'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.even > td:nth-child(2)').text.strip()
-                # message_data['type'] = soup.select_one('').text.strip()
-                # message_data['address'] = soup.select_one('').text.strip()
-            message_data['type'] = ''
-            message_data['address'] = ''
-            message_data['description'] = soup.select_one('.lotInfo > tbody:nth-child(1) > tr:nth-child(2) > td:nth-child(2)').text.strip()
-            # print(message_data['description'])
+        print('\033[92m' + 'Найдено: {}'.format(kw) + '\033[0m')
+        if 'ФИО' in soup.text:
+            message_data['inn'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(6) > tbody > tr:nth-child(5) > td:nth-child(2)').text.strip()
+            message_data['date_pub'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.odd > td:nth-child(2)').text.strip()
+            message_data['message_number'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.even > td:nth-child(2)').text.strip()
+            # message_data['type'] = soup.select_one('').text.strip()
+            # message_data['address'] = soup.select_one('').text.strip()
+        else:
+            message_data['inn'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(6) > tbody > tr:nth-child(4) > td:nth-child(2)').text.strip()
+            message_data['date_pub'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.odd > td:nth-child(2)').text.strip()
+            message_data['message_number'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.even > td:nth-child(2)').text.strip()
+            # message_data['type'] = soup.select_one('').text.strip()
+            # message_data['address'] = soup.select_one('').text.strip()
+        # message_data['type'] = ''
+        # message_data['address'] = ''
+        message_data['description'] = soup.select_one('.lotInfo > tbody:nth-child(1) > tr:nth-child(2) > td:nth-child(2)').text.strip()
+        # print(message_data['description'])
+        message_data['auction_type'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(14) > tbody > tr:nth-child(1) > td:nth-child(2)').text.strip()
+        message_data['date_start'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(14) > tbody > tr:nth-child(2) > td:nth-child(2)').text.strip()
+        try:
+            message_data['place'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(14) > tbody > tr:nth-child(7) > td:nth-child(2)').text.strip()
+        except:
+            message_data['place'] = ''
+        message_data['link'] = link
 
-            # rows = soup.select('.lotInfo > tbody:nth-child(1) > tr')
-            # for r in rows:
-            #     desc = r.select_one('td:nth-child(2)')
-            #     price = r.select_one('td:nth-child(3)').text.strip().split(',')[0].replace(' ', '')
-            #     print(price)
-            # return
-
-
-
-
-
-
-
-
-            # lot_data['start_price'] = int(soup.select_one('table.lotInfo > tbody > tr.odd > td:nth-child(3)').text.strip().split(',')[0].replace(' ', ''))
-            message_data['auction_type'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(14) > tbody > tr:nth-child(1) > td:nth-child(2)').text.strip()
-            message_data['date_start'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(14) > tbody > tr:nth-child(2) > td:nth-child(2)').text.strip()
+        # ---------- Получение данных по лотам из таблицы ----------
+        rows = soup.select('.lotInfo > tbody:nth-child(1) > tr')
+        for r in rows:
+            lot_data = {}
+            lot_data['message_number'] = message_data['message_number']
+            lot_data['description'] = ''
+            lot_data['type'] = ''
+            lot_data['start_price'] = ''
             try:
-                message_data['place'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(14) > tbody > tr:nth-child(7) > td:nth-child(2)').text.strip()
+                lot_data['description'] = r.select_one('td:nth-child(2)').text
             except:
-                message_data['place'] = ''
-            message_data['link'] = link
+                pass
+            try:
+                lot_data['start_price'] = int(r.select_one('td:nth-child(3)').text.strip().split(',')[0].replace(' ', ''))
+            except:
+                pass
 
-            return message_data
-
+            message_data['lots'].append(lot_data)
+        # ------------------------------------------------------------
+        return message_data
     return False
+
 
 
 def get_info(page):

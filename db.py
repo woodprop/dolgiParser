@@ -8,7 +8,7 @@ class LinkDB:
         self.conn = sqlite3.connect('Database.db')
         self.cursor = self.conn.cursor()
         self.cursor.execute("""CREATE TABLE IF NOT EXISTS debtors (id VARCHAR(16) NOT NULL, name VARCHAR(255), type VARCHAR(16), link VARCHAR(255), PRIMARY KEY (id))""")
-        self.cursor.execute("""CREATE TABLE IF NOT EXISTS lots (id INTEGER PRIMARY KEY AUTOINCREMENT, inn VARCHAR(16), date_pub VARCHAR(16), lot_number VARCHAR(16) UNIQUE, type VARCHAR(16), description TEXT, address TINYTEXT, start_price INT, auction_type VARCHAR(32), date_start VARCHAR(16), place VARCHAR(32), link VARCHAR(255))""")
+        self.cursor.execute("""CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, inn VARCHAR(16), date_pub VARCHAR(16), lot_number VARCHAR(16) UNIQUE, type VARCHAR(16), description TEXT, address TINYTEXT, start_price INT, auction_type VARCHAR(32), date_start VARCHAR(16), place VARCHAR(32), link VARCHAR(255))""")
 
 
     def add_debtor(self, debtor):
@@ -19,9 +19,9 @@ class LinkDB:
         except:
             print('\033[91m' + 'Запись не добавлена, скорее всего, она уже существует...' + '\033[0m')
 
-    def add_lot(self, lot):
+    def add_message(self, lot):
         try:
-            self.cursor.execute("INSERT INTO lots (inn, date_pub, lot_number, type, description, address, start_price, auction_type, date_start, place, link) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            self.cursor.execute("INSERT INTO messages (inn, date_pub, lot_number, type, description, address, start_price, auction_type, date_start, place, link) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                                 (lot['inn'], lot['date_pub'], lot['lot_number'], lot['type'], lot['description'], lot['address'], lot['start_price'], lot['auction_type'], lot['date_start'], lot['place'], lot['link']))
             self.conn.commit()
             print('\033[92m' + 'Лот внесён в базу' + '\033[0m')
@@ -37,7 +37,7 @@ class LinkDB:
         print(self.cursor.fetchall())
 
     def create_web(self):
-        self.cursor.execute("SELECT DISTINCT lots.link, description, debtors.name, debtors.link FROM lots JOIN debtors ON lots.inn = debtors.id")
+        self.cursor.execute("SELECT DISTINCT messages.link, description, debtors.name, debtors.link FROM messages JOIN debtors ON messages.inn = debtors.id")
         res = self.cursor.fetchall()
         # print(res[0][3])
         # return

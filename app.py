@@ -30,7 +30,7 @@ def main():
         # print(link)
         lot = get_lot_info(link, keywords)
         if lot:
-            db.add_lot(lot)
+            db.add_message(lot)
 
     if not debtors:
         print('Должники не найдены...')
@@ -157,7 +157,23 @@ def get_lot_info(link, keywords):
                 # lot_data['address'] = soup.select_one('').text.strip()
             lot_data['type'] = ''
             lot_data['address'] = ''
-            lot_data['description'] = soup.select('div.msg')[-2].text.strip()
+            lot_data['description'] = soup.select_one('.lotInfo > tbody:nth-child(1) > tr:nth-child(2) > td:nth-child(2)').text.strip()
+            # print(lot_data['description'])
+
+            # rows = soup.select('.lotInfo > tbody:nth-child(1) > tr')
+            # for r in rows:
+            #     desc = r.select_one('td:nth-child(2)')
+            #     price = r.select_one('td:nth-child(3)').text.strip().split(',')[0].replace(' ', '')
+            #     print(price)
+            # return
+
+
+
+
+
+
+
+
             lot_data['start_price'] = int(soup.select_one('table.lotInfo > tbody > tr.odd > td:nth-child(3)').text.strip().split(',')[0].replace(' ', ''))
             lot_data['auction_type'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(14) > tbody > tr:nth-child(1) > td:nth-child(2)').text.strip()
             lot_data['date_start'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(14) > tbody > tr:nth-child(2) > td:nth-child(2)').text.strip()

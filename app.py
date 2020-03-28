@@ -7,6 +7,7 @@ from db import LinkDB
 base_url = 'http://bankrot.fedresurs.ru'
 base_url_mes = 'https://bankrot.fedresurs.ru/Messages.aspx'
 
+
 def main():
     keywords = ['здание', 'помещение', 'квартира']
     html = asyncio.get_event_loop().run_until_complete(get_search_result_page(base_url_mes, 3000))
@@ -149,18 +150,11 @@ def get_message_info(link, keywords):
             message_data['inn'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(6) > tbody > tr:nth-child(5) > td:nth-child(2)').text.strip()
             message_data['date_pub'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.odd > td:nth-child(2)').text.strip()
             message_data['message_number'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.even > td:nth-child(2)').text.strip()
-            # message_data['type'] = soup.select_one('').text.strip()
-            # message_data['address'] = soup.select_one('').text.strip()
         else:
             message_data['inn'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(6) > tbody > tr:nth-child(4) > td:nth-child(2)').text.strip()
             message_data['date_pub'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.odd > td:nth-child(2)').text.strip()
             message_data['message_number'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.even > td:nth-child(2)').text.strip()
-            # message_data['type'] = soup.select_one('').text.strip()
-            # message_data['address'] = soup.select_one('').text.strip()
-        # message_data['type'] = ''
-        # message_data['address'] = ''
         message_data['description'] = soup.select('div.msg')[-2].text.strip()
-        # print(message_data['description'])
         message_data['auction_type'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(14) > tbody > tr:nth-child(1) > td:nth-child(2)').text.strip()
         message_data['date_start'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(14) > tbody > tr:nth-child(2) > td:nth-child(2)').text.strip()
         try:
@@ -179,6 +173,22 @@ def get_message_info(link, keywords):
             lot_data['start_price'] = ''
             try:
                 lot_data['description'] = r.select_one('td:nth-child(2)').text
+            except:
+                pass
+
+            # ---------- Поиск кадастровых номеров и оборачивание в ссылки ----------
+            # ToDo добить шаблоны
+            try:
+                lot_text = r.select_one('td:nth-child(2)').text
+                matches = set(re.findall(r'\d{2}:\d{2}:\d{6,7}:\d{2,4}', lot_text))
+
+                print(matches)
+                for m in matches:
+                    print(m)
+                    lot_text = lot_text.replace(m, '<a href="' + 'https://roskarta.com/map/' + m + '">' + m + '</a>')
+
+                    # print(lot_text)
+                    lot_data['description'] = lot_text
             except:
                 pass
             try:

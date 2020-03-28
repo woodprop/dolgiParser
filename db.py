@@ -28,7 +28,8 @@ class LinkDB:
             print('\033[92m' + 'Сообщение внесено в базу' + '\033[0m')
             for lot in message['lots']:
                 # print(lot)
-                self.add_lot(lot)
+                if lot['description'] and lot['start_price']:
+                    self.add_lot(lot)
         except:
             print('\033[91m' + 'Запись не добавлена, скорее всего, она уже существует...' + '\033[0m')
 
@@ -78,17 +79,32 @@ class LinkDB:
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 
-    <title>Hello, world!</title>
+    <title>Результаты поиска</title>
   </head>
   <body>
     <div class="container">
     {% for message in res %}
         <div class="card mt-5">
-          <div class="card-header bg-dark text-white">
-            <b>{{ message[2] }}</b>
+          <div class="card-header bg-dark text-white d-flex justify-content-between">
+            <b>№ сообщения: {{ message[4] }}</b>
+            <span class="">Дата публикации: {{ message[4] }}</span> 
           </div>
           <div class="card-body">
-            <p class="card-text">{{ shorten(message[1], width=1000, placeholder='...') }}</p>
+          <div class="accordion" id="accordionExample">
+          <div class="card">
+            <div class="card-header" id="headingTwo">
+              <h2 class="mb-0">
+                <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                  Объявление о проведении торгов
+                </button>
+              </h2>
+            </div>
+            <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionExample">
+              <div class="card-body">
+                {{ message[1] }}
+              </div>
+            </div>
+            </div>
             <h5 class="text-right">Начало подачи заявок: {{ message[5] }}</h5 class="text-right">
             <h3 class="text-center">Лоты:</h3>
             <table class="table table-bordered">

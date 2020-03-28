@@ -13,7 +13,7 @@ def main():
     # return
     db = LinkDB()
     # db.insert('hlkgsdkgjksd')
-    # db.get_all()
+    # db.get_lots(4846856)
     # db.create_web()
     # return
     # html = asyncio.get_event_loop().run_until_complete(get_html(base_url_mes, 2000))
@@ -83,13 +83,13 @@ async def get_search_result_page(url, delay):
     await page.keyboard.down('Control')
     await page.keyboard.press('KeyA')
     await page.keyboard.up('Control')
-    await page.type('input[id="ctl00_cphBody_cldrBeginDate_tbSelectedDate"]', '22.03.2020')
+    await page.type('input[id="ctl00_cphBody_cldrBeginDate_tbSelectedDate"]', '01.03.2020')
 
     await page.click('input[id="ctl00_cphBody_cldrEndDate_tbSelectedDate"]')
     await page.keyboard.down('Control')
     await page.keyboard.press('KeyA')
     await page.keyboard.up('Control')
-    await page.type('input[id="ctl00_cphBody_cldrEndDate_tbSelectedDate"]', '22.03.2020')
+    await page.type('input[id="ctl00_cphBody_cldrEndDate_tbSelectedDate"]', '01.03.2020')
 
     await page.keyboard.press('Enter')
     print('Поиск...')
@@ -159,7 +159,7 @@ def get_message_info(link, keywords):
             # message_data['address'] = soup.select_one('').text.strip()
         # message_data['type'] = ''
         # message_data['address'] = ''
-        message_data['description'] = soup.select_one('.lotInfo > tbody:nth-child(1) > tr:nth-child(2) > td:nth-child(2)').text.strip()
+        message_data['description'] = soup.select('div.msg')[-2].text.strip()
         # print(message_data['description'])
         message_data['auction_type'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(14) > tbody > tr:nth-child(1) > td:nth-child(2)').text.strip()
         message_data['date_start'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(14) > tbody > tr:nth-child(2) > td:nth-child(2)').text.strip()

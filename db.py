@@ -1,6 +1,7 @@
 import sqlite3
 import datetime
 from textwrap import shorten
+from jinja2 import Template, Environment
 
 
 class LinkDB:
@@ -26,7 +27,7 @@ class LinkDB:
             self.conn.commit()
             print('\033[92m' + 'Сообщение внесено в базу' + '\033[0m')
             for lot in message['lots']:
-                print(lot)
+                # print(lot)
                 self.add_lot(lot)
         except:
             print('\033[91m' + 'Запись не добавлена, скорее всего, она уже существует...' + '\033[0m')
@@ -46,27 +47,83 @@ class LinkDB:
         self.cursor.execute("INSERT INTO links VALUES (?, ?)", (link, datetime.datetime.now()))
         self.conn.commit()
 
-    def get_all(self):
-        self.cursor.execute("SELECT * FROM links")
-        print(self.cursor.fetchall())
+    def get_lots(self, message_number):
+        self.cursor.execute("SELECT type, description, address, start_price FROM lots WHERE lots.message_number = " + str(message_number))
+        return self.cursor.fetchall()
 
     def create_web(self):
-        self.cursor.execute("SELECT DISTINCT messages.link, description, debtors.name, debtors.link FROM messages JOIN debtors ON messages.inn = debtors.id")
+        data = []
+        self.cursor.execute("SELECT DISTINCT messages.link, messages.description, debtors.name, debtors.link, messages.message_number, messages.date_start FROM messages JOIN debtors ON messages.inn = debtors.id")
         res = self.cursor.fetchall()
-        # print(res[0][3])
-        # return
-        file = open('links.html', 'w', encoding='utf8')
-        for message in res:
-            file.write('<div>' + '\n')
-            message_link = """<a href="{}">{}</a>""".format(message[0], message[0])
-            sepatator = '<span> - </span>'
-            message_debtor = """<a href="{}">{}</a>""".format(message[3], message[2])
-            message_desc = """<p>{}</p>""".format(shorten(message[1], width=1000, placeholder='...'))
 
-            file.write(message_link + '\n')
-            file.write(sepatator + '\n')
-            file.write(message_debtor + '\n')
-            file.write(message_desc + '\n')
-            file.write('</div>' + '\n')
-            file.write('<hr>' + '\n')
+        for r in res:
+            msg_data = []
+            for i in r:
+                msg_data.append(i)
+            lots = self.get_lots(r[4])
+            msg_data.append(lots)
+            data.append(msg_data)
+        # print(data[0][5])
+
+        file = open('links.html', 'w', encoding='utf8')
+
+        template = Template(u'''\
+<!doctype html>
+<html lang="en">
+  <head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+
+    <title>Hello, world!</title>
+  </head>
+  <body>
+    <div class="container">
+    {% for message in res %}
+        <div class="card mt-5">
+          <div class="card-header bg-dark text-white">
+            <b>{{ message[2] }}</b>
+          </div>
+          <div class="card-body">
+            <p class="card-text">{{ shorten(message[1], width=1000, placeholder='...') }}</p>
+            <h5 class="text-right">Начало подачи заявок: {{ message[5] }}</h5 class="text-right">
+            <h3 class="text-center">Лоты:</h3>
+            <table class="table table-bordered">
+              <thead class="thead-light">
+                <tr>
+                  <th scope="col">Описание</th>
+                  <th scope="col">Цена</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for lot in message[6] %}
+                <tr>
+                  <td><p>{{ lot[1] }}</p></td>
+                  <td>{{ lot[3] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            </table>
+            <a href="{{ message[0] }}" class="btn btn-info">Объявление о проведении торгов</a>
+            <a href="{{ message[3] }}" class="btn btn-danger">Карточка должника</a>
+            
+            
+          </div>
+        </div>
+    {% endfor %}
+    </div>
+    
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+  </body>
+</html>''')
+
+        file.write(template.render({'res': data, 'shorten': shorten}))
         file.close()

@@ -7,9 +7,21 @@ from db import LinkDB
 base_url = 'http://bankrot.fedresurs.ru'
 base_url_mes = 'https://bankrot.fedresurs.ru/Messages.aspx'
 
+# ---------- Сброс ограничения времени открытого браузера в 20 секунд ----------
+def disable_timeout_pyppeteer():
+    import pyppeteer.connection
+    original_method = pyppeteer.connection.websockets.client.connect
+    def new_method(*args, **kwargs):
+        kwargs['ping_interval'] = None
+        kwargs['ping_timeout'] = None
+        return original_method(*args, **kwargs)
+
+    pyppeteer.connection.websockets.client.connect = new_method
+# -------------------------------------------------------------------------------
 
 def main():
     keywords = ['здание', 'помещение', 'квартира']
+    disable_timeout_pyppeteer()
     html = asyncio.get_event_loop().run_until_complete(get_search_result_page(base_url_mes, 3000))
     # return
     db = LinkDB()
@@ -60,6 +72,7 @@ async def get_search_result_page(url, delay):
     browser = await launch()
     page = await browser.newPage()
 
+
     await page.setViewport(viewport=dict(width=1920, height=4080))
 
     await page.goto(url)
@@ -84,19 +97,44 @@ async def get_search_result_page(url, delay):
     await page.keyboard.down('Control')
     await page.keyboard.press('KeyA')
     await page.keyboard.up('Control')
-    await page.type('input[id="ctl00_cphBody_cldrBeginDate_tbSelectedDate"]', '01.03.2020')
+    await page.type('input[id="ctl00_cphBody_cldrBeginDate_tbSelectedDate"]', '03.03.2020')
 
     await page.click('input[id="ctl00_cphBody_cldrEndDate_tbSelectedDate"]')
     await page.keyboard.down('Control')
     await page.keyboard.press('KeyA')
     await page.keyboard.up('Control')
-    await page.type('input[id="ctl00_cphBody_cldrEndDate_tbSelectedDate"]', '01.03.2020')
+    await page.type('input[id="ctl00_cphBody_cldrEndDate_tbSelectedDate"]', '03.03.2020')
 
     await page.keyboard.press('Enter')
     print('Поиск...')
+    # await page.waitForSelector('table.bank')
+    # print('OK')
     await page.waitFor(5000)
     # await page.screenshot({'path': 'example.png'})
     html = await page.content()
+    # --------------------- test code ---------------------------
+
+    # print(len(html))
+
+    for p in range(2, 10):
+        print('\033[92m' + 'Поиск по странице {}...'.format(p) + '\033[0m')
+        await page.evaluate('''__doPostBack('ctl00$cphBody$gvMessages','Page${}')'''.format(p))
+        await page.waitFor(1000)
+        if await page.querySelector('th[scope="col"]'):
+            # await page.screenshot({'path': 'example{}.png'.format(p)})
+            html += await page.content()
+            print('\033[92m' + 'Успешно!' + '\033[0m')
+            # print(len(html))
+        else:
+            break
+    # print(pagination_links)
+    # for p_link in pagination_links:
+    #     print(p_link)
+
+
+
+
+    # -----------------------------------------------------------
     await browser.close()
 
     return html
@@ -110,7 +148,7 @@ async def get_html(url, delay):
     print('Loading page...')
     await page.waitForSelector('table')
     # await page.waitFor(delay)
-    await page.screenshot({'path': 'example.png'})
+    # await page.screenshot({'path': 'example.png'})
     html = await page.content()
     await browser.close()
     return html
@@ -182,9 +220,9 @@ def get_message_info(link, keywords):
                 lot_text = r.select_one('td:nth-child(2)').text
                 matches = set(re.findall(r'\d{1,4}:\d{1,4}:\d+:\d{1,6}', lot_text))
 
-                print(matches)
+                # print(matches)
                 for m in matches:
-                    print(m)
+                    # print(m)
                     lot_text = lot_text.replace(m, '<a href="' + 'https://roskarta.com/map/' + m + '" target="_blank">' + m + '</a>')
 
                     # print(lot_text)
@@ -209,7 +247,6 @@ def get_info(page):
     soup = BeautifulSoup(page, 'html.parser')
 
     links = soup.find_all('a', text=re.compile("Объявление о проведении торгов"))    # Ключевая фраза
-
     if links:
         for l in links:
             debtor_link = l.parent.nextSibling.find('a')

@@ -54,7 +54,7 @@ class LinkDB:
 
     def create_web(self):
         data = []
-        self.cursor.execute("SELECT DISTINCT messages.link, messages.description, debtors.name, debtors.link, messages.message_number, messages.date_start FROM messages JOIN debtors ON messages.inn = debtors.id")
+        self.cursor.execute("SELECT DISTINCT messages.link, messages.description, debtors.name, debtors.link, messages.message_number, messages.date_start, messages.date_pub FROM messages JOIN debtors ON messages.inn = debtors.id")
         res = self.cursor.fetchall()
 
         for r in res:
@@ -87,15 +87,15 @@ class LinkDB:
         <div class="card mt-5">
           <div class="card-header bg-dark text-white d-flex justify-content-between">
             <b>№ сообщения: {{ message[4] }}</b>
-            <span class="">Дата публикации: {{ message[4] }}</span> 
+            <span class="">Дата публикации: {{ message[6] }}</span> 
           </div>
           <div class="card-body">
           <div class="accordion" id="accordionExample">
           <div class="card">
             <div class="card-header" id="headingTwo">
               <h2 class="mb-0">
-                <button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                  Объявление о проведении торгов
+                <button class="btn btn-outline-secondary collapsed" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                  Текст объявления
                 </button>
               </h2>
             </div>
@@ -115,9 +115,9 @@ class LinkDB:
                 </tr>
               </thead>
               <tbody>
-                {% for lot in message[6] %}
+                {% for lot in message[7] %}
                 <tr>
-                  <td><p>{{ lot[1] }}</p></td>
+                  <td><div style="max-height: 150px; overflow-y: scroll">{{ lot[1] }}</div></td>
                   <td>{{ lot[3] }}</td>
                 </tr>
                 {% endfor %}

@@ -180,12 +180,12 @@ def get_message_info(link, keywords):
             # ToDo добить шаблоны
             try:
                 lot_text = r.select_one('td:nth-child(2)').text
-                matches = set(re.findall(r'\d{2}:\d{2}:\d{6,7}:\d{2,4}', lot_text))
+                matches = set(re.findall(r'\d{1,4}:\d{1,4}:\d+:\d{1,6}', lot_text))
 
                 print(matches)
                 for m in matches:
                     print(m)
-                    lot_text = lot_text.replace(m, '<a href="' + 'https://roskarta.com/map/' + m + '">' + m + '</a>')
+                    lot_text = lot_text.replace(m, '<a href="' + 'https://roskarta.com/map/' + m + '" target="_blank">' + m + '</a>')
 
                     # print(lot_text)
                     lot_data['description'] = lot_text

@@ -105,7 +105,7 @@ class LinkDB:
               </div>
             </div>
             </div>
-            <h5 class="text-right">Начало подачи заявок: {{ message[5] }}</h5 class="text-right">
+            
             <h3 class="text-center">Лоты:</h3>
             <table class="table table-bordered">
               <thead class="thead-light">
@@ -126,6 +126,7 @@ class LinkDB:
             <a href="{{ message[0] }}" class="btn btn-info">Объявление о проведении торгов</a>
             <a href="{{ message[3] }}" class="btn btn-danger">Карточка должника</a>
             <a href="" class="btn btn-secondary disabled">Площадка торгов</a>
+            <h5 class="d-inline-block float-right text-right">Начало подачи заявок: {{ message[5] }}</h5>
             
             
           </div>

@@ -118,13 +118,14 @@ class LinkDB:
                 {% for lot in message[7] %}
                 <tr>
                   <td><div style="max-height: 150px; overflow-y: scroll">{{ lot[1] }}</div></td>
-                  <td>{{ lot[3] }}</td>
+                  <td>{{ '{:0,}&nbsp;&#8381;'.format(lot[3]).replace(',', '&nbsp;') }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
             </table>
             <a href="{{ message[0] }}" class="btn btn-info">Объявление о проведении торгов</a>
             <a href="{{ message[3] }}" class="btn btn-danger">Карточка должника</a>
+            <a href="" class="btn btn-secondary disabled">Площадка торгов</a>
             
             
           </div>

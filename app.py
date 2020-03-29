@@ -180,7 +180,7 @@ def get_message_info(link, keywords):
         return False
 
     for kw in keywords:
-        if kw not in lot_table:
+        if kw not in lot_table.lower():
             continue
 
         print('\033[92m' + 'Найдено: {}'.format(kw) + '\033[0m')
@@ -223,7 +223,7 @@ def get_message_info(link, keywords):
                 # print(matches)
                 for m in matches:
                     # print(m)
-                    lot_text = lot_text.replace(m, '<a href="' + 'https://roskarta.com/map/' + m + '" target="_blank">' + m + '</a>')
+                    lot_text = lot_text.replace(m, ' <a href="' + 'https://roskarta.com/map/' + m + '" target="_blank"> ' + m + '</a>')
 
                     # print(lot_text)
                     lot_data['description'] = lot_text

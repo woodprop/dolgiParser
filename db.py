@@ -1,7 +1,7 @@
 import sqlite3
 import datetime
 from textwrap import shorten
-from jinja2 import Template, Environment
+from jinja2 import Template
 
 
 class LinkDB:
@@ -12,6 +12,7 @@ class LinkDB:
         self.cursor.execute("""CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, inn VARCHAR(16), date_pub VARCHAR(16), message_number VARCHAR(16) UNIQUE, description TEXT, auction_type VARCHAR(32), date_start VARCHAR(16), place VARCHAR(32), link VARCHAR(255))""")
         self.cursor.execute("""CREATE TABLE IF NOT EXISTS lots (id INTEGER PRIMARY KEY AUTOINCREMENT, message_number VARCHAR(16), description TEXT, address TINYTEXT, type VARCHAR(16), start_price INT)""")
 
+    # ---------- Добавление должника в базу ----------
     def add_debtor(self, debtor):
         try:
             self.cursor.execute("INSERT INTO debtors (name, link, id, type) VALUES (?, ?, ?, ?)", (debtor['name'], debtor['link'], debtor['inn'], debtor['type']))
@@ -20,6 +21,7 @@ class LinkDB:
         except:
             print('\033[91m' + 'Запись не добавлена, скорее всего, она уже существует...' + '\033[0m')
 
+    # ---------- Добавление сообщения о торгах в базу ----------
     def add_message(self, message):
         try:
             self.cursor.execute("INSERT INTO messages (inn, date_pub, message_number, description, auction_type, date_start, place, link) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -33,8 +35,7 @@ class LinkDB:
         except:
             print('\033[91m' + 'Запись не добавлена, скорее всего, она уже существует...' + '\033[0m')
 
-
-
+    # ---------- Добавление лота в базу ----------
     def add_lot(self, lot):
         try:
             self.cursor.execute("INSERT INTO lots (message_number, description, type, start_price) VALUES (?, ?, ?, ?)",
@@ -57,17 +58,23 @@ class LinkDB:
         self.cursor.execute("SELECT DISTINCT messages.link, messages.description, debtors.name, debtors.link, messages.message_number, messages.date_start, messages.date_pub FROM messages JOIN debtors ON messages.inn = debtors.id")
         res = self.cursor.fetchall()
 
-        for r in res:
-            msg_data = []
-            for i in r:
-                msg_data.append(i)
-            lots = self.get_lots(r[4])
-            msg_data.append(lots)
+        for row in res:
+            msg_data = {
+                'message_link': row[0],
+                'message_description': row[1],
+                'message_number': row[4],
+                'message_date_start': row[5],
+                'message_date_pub': row[6],
+                'debtor_name': row[2],
+                'debtor_link': row[3],
+                'message_lots': [],
+            }
+
+            lots = self.get_lots(msg_data['message_number'])
+            msg_data['message_lots'] = lots
             data.append(msg_data)
-        # print(data[0][5])
 
         file = open('links.html', 'w', encoding='utf8')
-
         template = Template(u'''\
 <!doctype html>
 <html lang="en">
@@ -86,8 +93,8 @@ class LinkDB:
     {% for message in res %}
         <div class="card mt-5">
           <div class="card-header bg-dark text-white d-flex justify-content-between">
-            <b>№ сообщения: {{ message[4] }}</b>
-            <span class="">Дата публикации: {{ message[6] }}</span> 
+            <b>№ сообщения: {{ message['message_number'] }}</b>
+            <span class="">Дата публикации: {{ message['message_date_pub'] }}</span> 
           </div>
           <div class="card-body">
           <div class="accordion" id="accordionExample">
@@ -101,7 +108,7 @@ class LinkDB:
             </div>
             <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionExample">
               <div class="card-body">
-                {{ message[1] }}
+                {{ message['message_description'] }}
               </div>
             </div>
             </div>
@@ -115,7 +122,7 @@ class LinkDB:
                 </tr>
               </thead>
               <tbody>
-                {% for lot in message[7] %}
+                {% for lot in message['message_lots'] %}
                 <tr>
                   <td><div style="max-height: 150px; overflow-y: scroll">{{ lot[1] }}</div></td>
                   <td>{{ '{:0,}&nbsp;&#8381;'.format(lot[3]).replace(',', '&nbsp;') }}</td>
@@ -123,10 +130,10 @@ class LinkDB:
                 {% endfor %}
             </tbody>
             </table>
-            <a href="{{ message[0] }}" class="btn btn-info">Объявление о проведении торгов</a>
-            <a href="{{ message[3] }}" class="btn btn-danger">Карточка должника</a>
-            <a href="" class="btn btn-secondary disabled">Площадка торгов</a>
-            <h5 class="d-inline-block float-right text-right">Начало подачи заявок: {{ message[5] }}</h5>
+            <a href="{{ message['message_link'] }}" target="_blank" class="btn btn-info">Объявление о проведении торгов</a>
+            <a href="{{ message['debtor_link'] }}" target="_blank" class="btn btn-danger">Карточка должника</a>
+            <a href="#" target="_blank" class="btn btn-secondary disabled">Площадка торгов</a>
+            <h5 class="d-inline-block float-right text-right">Начало подачи заявок: {{ message['message_date_start'] }}</h5>
             
             
           </div>

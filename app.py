@@ -184,7 +184,9 @@ def get_message_info(link, keywords):
             continue
 
         print('\033[92m' + 'Найдено: {}'.format(kw) + '\033[0m')
-        if 'ФИО' in soup.text:
+        # if 'ФИО' in soup.text:
+        if 'ФИО' in soup.select_one('table.headInfo:nth-child(6)').text:
+            print('Физ лицо')
             message_data['inn'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(6) > tbody > tr:nth-child(5) > td:nth-child(2)').text.strip()
             message_data['date_pub'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.odd > td:nth-child(2)').text.strip()
             message_data['message_number'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.even > td:nth-child(2)').text.strip()

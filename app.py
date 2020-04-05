@@ -42,8 +42,11 @@ def main():
         return
 
     print('\033[92m' + 'Начало проверки сообщений...' + '\033[0m')
-    for link in links:
+    links_count = len(links)
+    debtors_count = len(debtors)
+    for index, link in enumerate(links):
         # print(link)
+        print('\033[92m' + 'Сообщение ' + str(index + 1) + ' из ' + str(links_count) + '\033[0m')
         message = get_message_info(link, keywords)
         if message:
             db.add_message(message)
@@ -53,8 +56,9 @@ def main():
         return
 
     print('\033[92m' + 'Внесение должников в базу...' + '\033[0m')
-    for d in debtors:
+    for i, d in enumerate(debtors):
         # print(d['name'], d['link'])
+        print('\033[92m' + 'Должник ' + str(i + 1) + ' из ' + str(links_count) + '\033[0m')
         d.update(get_debtor_info(d))
         if 'Organization' in d['link']:
             d['type'] = 'company'
@@ -100,13 +104,13 @@ async def get_search_result_page(url, delay):
     await page.keyboard.down('Control')
     await page.keyboard.press('KeyA')
     await page.keyboard.up('Control')
-    await page.type('input[id="ctl00_cphBody_cldrBeginDate_tbSelectedDate"]', '27.03.2020')
+    await page.type('input[id="ctl00_cphBody_cldrBeginDate_tbSelectedDate"]', '01.04.2020')
 
     await page.click('input[id="ctl00_cphBody_cldrEndDate_tbSelectedDate"]')
     await page.keyboard.down('Control')
     await page.keyboard.press('KeyA')
     await page.keyboard.up('Control')
-    await page.type('input[id="ctl00_cphBody_cldrEndDate_tbSelectedDate"]', '27.03.2020')
+    await page.type('input[id="ctl00_cphBody_cldrEndDate_tbSelectedDate"]', '01.04.2020')
 
     await page.keyboard.press('Enter')
     print('Поиск...')
@@ -179,7 +183,7 @@ def get_message_info(link, keywords):
         print('\033[92m' + 'Найдено: {}'.format(kw) + '\033[0m')
         # if 'ФИО' in soup.text:
         if 'ФИО' in soup.select_one('table.headInfo:nth-child(6)').text:
-            print('Физ лицо')
+            # print('Физ лицо')
             message_data['inn'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(6) > tbody > tr:nth-child(5) > td:nth-child(2)').text.strip()
             message_data['date_pub'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.odd > td:nth-child(2)').text.strip()
             message_data['message_number'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.even > td:nth-child(2)').text.strip()

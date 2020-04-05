@@ -101,41 +101,40 @@ class LinkDB:
           <div class="card">
             <div class="card-header" id="headingTwo">
               <h2 class="mb-0">
-                <button class="btn btn-outline-secondary collapsed" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                <button class="btn btn-outline-secondary collapsed" type="button" data-toggle="collapse" data-target="#collapse{{ message['message_number'] }}" aria-expanded="false" aria-controls="collapseTwo">
                   Текст объявления
                 </button>
               </h2>
             </div>
-            <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionExample">
+            <div id="collapse{{ message['message_number'] }}" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionExample">
               <div class="card-body">
                 {{ message['message_description'] }}
               </div>
             </div>
             </div>
+            </div>
             
             <h3 class="text-center">Лоты:</h3>
             <table class="table table-bordered">
-              <thead class="thead-light">
-                <tr>
-                  <th scope="col">Описание</th>
-                  <th scope="col">Цена</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for lot in message['message_lots'] %}
-                <tr>
-                  <td><div style="max-height: 150px; overflow-y: scroll">{{ lot[1] }}</div></td>
-                  <td>{{ '{:0,}&nbsp;&#8381;'.format(lot[3]).replace(',', '&nbsp;') }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
+                <thead class="thead-light">
+                    <tr>
+                      <th scope="col">Описание</th>
+                      <th scope="col">Цена</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for lot in message['message_lots'] %}
+                    <tr>
+                      <td><div style="max-height: 150px; overflow-y: scroll">{{ lot[1] }}</div></td>
+                      <td>{{ '{:0,}&nbsp;&#8381;'.format(lot[3]).replace(',', '&nbsp;') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
             </table>
             <a href="{{ message['message_link'] }}" target="_blank" class="btn btn-info">Объявление о проведении торгов</a>
             <a href="{{ message['debtor_link'] }}" target="_blank" class="btn btn-danger">Карточка должника</a>
             <a href="#" target="_blank" class="btn btn-secondary disabled">Площадка торгов</a>
             <h5 class="d-inline-block float-right text-right">Начало подачи заявок: {{ message['message_date_start'] }}</h5>
-            
-            
           </div>
         </div>
     {% endfor %}

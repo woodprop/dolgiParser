@@ -8,8 +8,23 @@ base_url = 'http://bankrot.fedresurs.ru'
 base_url_mes = 'https://bankrot.fedresurs.ru/Messages.aspx'
 
 
+# ---------- Сброс ограничения времени открытого браузера в 20 секунд ----------
+def disable_timeout_pyppeteer():
+    import pyppeteer.connection
+    original_method = pyppeteer.connection.websockets.client.connect
+
+    def new_method(*args, **kwargs):
+        kwargs['ping_interval'] = None
+        kwargs['ping_timeout'] = None
+        return original_method(*args, **kwargs)
+
+    pyppeteer.connection.websockets.client.connect = new_method
+# -------------------------------------------------------------------------------
+
+
 def main():
     keywords = ['здание', 'помещение', 'квартира']
+    disable_timeout_pyppeteer()
     html = asyncio.get_event_loop().run_until_complete(get_search_result_page(base_url_mes, 3000))
     # return
     db = LinkDB()
@@ -27,8 +42,11 @@ def main():
         return
 
     print('\033[92m' + 'Начало проверки сообщений...' + '\033[0m')
-    for link in links:
+    links_count = len(links)
+    debtors_count = len(debtors)
+    for index, link in enumerate(links):
         # print(link)
+        print('\033[92m' + 'Сообщение ' + str(index + 1) + ' из ' + str(links_count) + '\033[0m')
         message = get_message_info(link, keywords)
         if message:
             db.add_message(message)
@@ -38,8 +56,9 @@ def main():
         return
 
     print('\033[92m' + 'Внесение должников в базу...' + '\033[0m')
-    for d in debtors:
+    for i, d in enumerate(debtors):
         # print(d['name'], d['link'])
+        print('\033[92m' + 'Должник ' + str(i + 1) + ' из ' + str(links_count) + '\033[0m')
         d.update(get_debtor_info(d))
         if 'Organization' in d['link']:
             d['type'] = 'company'
@@ -53,9 +72,10 @@ def main():
     # ---------- Сборка веб-страницы ----------
     print('Создание страницы со ссылками...')
     db.create_web()
-
 # -------------------------------------------------------------------------------------------------------------------
 
+
+# ---------- Подстановка данных для поиска и сбор результатов ----------
 async def get_search_result_page(url, delay):
     browser = await launch()
     page = await browser.newPage()
@@ -84,21 +104,36 @@ async def get_search_result_page(url, delay):
     await page.keyboard.down('Control')
     await page.keyboard.press('KeyA')
     await page.keyboard.up('Control')
-    await page.type('input[id="ctl00_cphBody_cldrBeginDate_tbSelectedDate"]', '01.03.2020')
+    await page.type('input[id="ctl00_cphBody_cldrBeginDate_tbSelectedDate"]', '01.04.2020')
 
     await page.click('input[id="ctl00_cphBody_cldrEndDate_tbSelectedDate"]')
     await page.keyboard.down('Control')
     await page.keyboard.press('KeyA')
     await page.keyboard.up('Control')
-    await page.type('input[id="ctl00_cphBody_cldrEndDate_tbSelectedDate"]', '01.03.2020')
+    await page.type('input[id="ctl00_cphBody_cldrEndDate_tbSelectedDate"]', '01.04.2020')
 
     await page.keyboard.press('Enter')
     print('Поиск...')
+    # await page.waitForSelector('table.bank')
+    # print('OK')
     await page.waitFor(5000)
     # await page.screenshot({'path': 'example.png'})
     html = await page.content()
-    await browser.close()
 
+    # --------------------- Обход страниц результатов (Pagination) ---------------------------
+    for p in range(2, 10):
+        print('\033[92m' + 'Поиск по странице {}...'.format(p) + '\033[0m')
+        await page.evaluate('''__doPostBack('ctl00$cphBody$gvMessages','Page${}')'''.format(p))
+        await page.waitFor(1000)
+        if await page.querySelector('th[scope="col"]'):
+            # await page.screenshot({'path': 'example{}.png'.format(p)})
+            html += await page.content()
+            print('\033[92m' + 'Успешно!' + '\033[0m')
+            # print(len(html))
+        else:
+            break
+
+    await browser.close()
     return html
 
 
@@ -110,7 +145,7 @@ async def get_html(url, delay):
     print('Loading page...')
     await page.waitForSelector('table')
     # await page.waitFor(delay)
-    await page.screenshot({'path': 'example.png'})
+    # await page.screenshot({'path': 'example.png'})
     html = await page.content()
     await browser.close()
     return html
@@ -142,11 +177,13 @@ def get_message_info(link, keywords):
         return False
 
     for kw in keywords:
-        if kw not in lot_table:
+        if kw not in lot_table.lower():
             continue
 
         print('\033[92m' + 'Найдено: {}'.format(kw) + '\033[0m')
-        if 'ФИО' in soup.text:
+        # if 'ФИО' in soup.text:
+        if 'ФИО' in soup.select_one('table.headInfo:nth-child(6)').text:
+            # print('Физ лицо')
             message_data['inn'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(6) > tbody > tr:nth-child(5) > td:nth-child(2)').text.strip()
             message_data['date_pub'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.odd > td:nth-child(2)').text.strip()
             message_data['message_number'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(2) > tbody > tr.even > td:nth-child(2)').text.strip()
@@ -166,11 +203,11 @@ def get_message_info(link, keywords):
         # ---------- Получение данных по лотам из таблицы ----------
         rows = soup.select('.lotInfo > tbody:nth-child(1) > tr')
         for r in rows:
-            lot_data = {}
-            lot_data['message_number'] = message_data['message_number']
-            lot_data['description'] = ''
-            lot_data['type'] = ''
-            lot_data['start_price'] = ''
+            lot_data = {'message_number': message_data['message_number'],
+                        'description': '',
+                        'type': '',
+                        'start_price': '',
+                        }
             try:
                 lot_data['description'] = r.select_one('td:nth-child(2)').text
             except:
@@ -182,10 +219,10 @@ def get_message_info(link, keywords):
                 lot_text = r.select_one('td:nth-child(2)').text
                 matches = set(re.findall(r'\d{1,4}:\d{1,4}:\d+:\d{1,6}', lot_text))
 
-                print(matches)
+                # print(matches)
                 for m in matches:
-                    print(m)
-                    lot_text = lot_text.replace(m, '<a href="' + 'https://roskarta.com/map/' + m + '" target="_blank">' + m + '</a>')
+                    # print(m)
+                    lot_text = lot_text.replace(m, ' <a href="' + 'https://roskarta.com/map/' + m + '" target="_blank"> ' + m + '</a>')
 
                     # print(lot_text)
                     lot_data['description'] = lot_text
@@ -202,43 +239,23 @@ def get_message_info(link, keywords):
     return False
 
 
-
 def get_info(page):
     data = {'links': [], 'debtors': []}
 
     soup = BeautifulSoup(page, 'html.parser')
 
     links = soup.find_all('a', text=re.compile("Объявление о проведении торгов"))    # Ключевая фраза
-
     if links:
-        for l in links:
-            debtor_link = l.parent.nextSibling.find('a')
+        for link_item in links:
+            debtor_link = link_item.parent.nextSibling.find('a')
             debtor = {'name': debtor_link.text.strip(), 'link': base_url + debtor_link['href']}
             # print('Должник: {} | Ссылка: {}'.format(debtor['name'], debtor['link']))
 
-            rawlink = l['onclick']
-            link = base_url.replace('/', '') + rawlink.split('\'')[1]   # ппц, но пока пусть так
+            raw_link = link_item['onclick']
+            link = base_url.replace('/', '') + raw_link.split('\'')[1]   # ппц, но пока пусть так
             data['links'].append(link)
             data['debtors'].append(debtor)
     return data
-
-
-# ---------- НЕ ИСПОЛЬЗУЕТСЯ!!!!!!! Проверка ссылки на наличие ключевых слов ToDO удалить в конце проекта ----------
-def check_link(link, keywords):
-    html = asyncio.get_event_loop().run_until_complete(get_html(link, 2000))
-    soup = BeautifulSoup(html, 'html.parser')
-    lot_text = soup.find('div', class_='msg')
-
-    for kw in keywords:
-        if kw in soup.text:
-            print('\033[92m' + 'Найдено: {}'.format(kw) + '\033[0m')
-            # snils = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(6) > tbody > tr:nth-child(6) > td:nth-child(2)')
-            # if snils:
-            #     print('СНИЛС: {}'.format(snils.text))
-            return html
-
-    return False
-# ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 if __name__ == '__main__':

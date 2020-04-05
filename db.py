@@ -101,12 +101,12 @@ class LinkDB:
           <div class="card">
             <div class="card-header" id="headingTwo">
               <h2 class="mb-0">
-                <button class="btn btn-outline-secondary collapsed" type="button" data-toggle="collapse" data-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                <button class="btn btn-outline-secondary collapsed" type="button" data-toggle="collapse" data-target="#collapse{{ message['message_number'] }}" aria-expanded="false" aria-controls="collapseTwo">
                   Текст объявления
                 </button>
               </h2>
             </div>
-            <div id="collapseTwo" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionExample">
+            <div id="collapse{{ message['message_number'] }}" class="collapse" aria-labelledby="headingTwo" data-parent="#accordionExample">
               <div class="card-body">
                 {{ message['message_description'] }}
               </div>

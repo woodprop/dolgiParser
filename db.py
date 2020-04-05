@@ -1,21 +1,26 @@
-import sqlite3
-import datetime
+import pymysql
 from textwrap import shorten
 from jinja2 import Template
 
 
 class LinkDB:
     def __init__(self):
-        self.conn = sqlite3.connect('Database.db')
+        self.conn = pymysql.connect(host='kkokarev.beget.tech',
+                                    user='kkokarev_lottest',
+                                    password='EUf9&gwu',
+                                    db='kkokarev_lottest',
+                                    charset='utf8mb4',
+                                    )
+
         self.cursor = self.conn.cursor()
         self.cursor.execute("""CREATE TABLE IF NOT EXISTS debtors (id VARCHAR(16) NOT NULL, name VARCHAR(255), type VARCHAR(16), link VARCHAR(255), PRIMARY KEY (id))""")
-        self.cursor.execute("""CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, inn VARCHAR(16), date_pub VARCHAR(16), message_number VARCHAR(16) UNIQUE, description TEXT, auction_type VARCHAR(32), date_start VARCHAR(16), place VARCHAR(32), link VARCHAR(255))""")
-        self.cursor.execute("""CREATE TABLE IF NOT EXISTS lots (id INTEGER PRIMARY KEY AUTOINCREMENT, message_number VARCHAR(16), description TEXT, address TINYTEXT, type VARCHAR(16), start_price INT)""")
+        self.cursor.execute("""CREATE TABLE IF NOT EXISTS messages (id INT PRIMARY KEY AUTO_INCREMENT, inn VARCHAR(16), date_pub VARCHAR(16), message_number VARCHAR(16) UNIQUE, description TEXT, auction_type VARCHAR(32), date_start VARCHAR(16), place VARCHAR(255), link VARCHAR(255))""")
+        self.cursor.execute("""CREATE TABLE IF NOT EXISTS lots (id INT PRIMARY KEY AUTO_INCREMENT, message_number VARCHAR(16), description TEXT, address TINYTEXT, type VARCHAR(16), start_price INT)""")
 
     # ---------- Добавление должника в базу ----------
     def add_debtor(self, debtor):
         try:
-            self.cursor.execute("INSERT INTO debtors (name, link, id, type) VALUES (?, ?, ?, ?)", (debtor['name'], debtor['link'], debtor['inn'], debtor['type']))
+            self.cursor.execute("INSERT INTO debtors (name, link, id, type) VALUES (%s, %s, %s, %s)", (debtor['name'], debtor['link'], debtor['inn'], debtor['type']))
             self.conn.commit()
             print('\033[92m' + 'Должник внесён в базу' + '\033[0m')
         except:
@@ -24,8 +29,8 @@ class LinkDB:
     # ---------- Добавление сообщения о торгах в базу ----------
     def add_message(self, message):
         try:
-            self.cursor.execute("INSERT INTO messages (inn, date_pub, message_number, description, auction_type, date_start, place, link) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                                (message['inn'], message['date_pub'], message['message_number'], message['description'], message['auction_type'], message['date_start'], message['place'], message['link']))
+            self.cursor.execute("INSERT INTO messages (inn, date_pub, message_number, description, auction_type, date_start, place, link) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                           (message['inn'], message['date_pub'], message['message_number'], message['description'], message['auction_type'], message['date_start'], message['place'], message['link']))
             self.conn.commit()
             print('\033[92m' + 'Сообщение внесено в базу' + '\033[0m')
             for lot in message['lots']:
@@ -38,19 +43,17 @@ class LinkDB:
     # ---------- Добавление лота в базу ----------
     def add_lot(self, lot):
         try:
-            self.cursor.execute("INSERT INTO lots (message_number, description, type, start_price) VALUES (?, ?, ?, ?)",
-                                (lot['message_number'], lot['description'], lot['type'], lot['start_price']))
+            self.cursor.execute("INSERT INTO lots (message_number, description, type, start_price) VALUES (%s, %s, %s, %s)",
+                            (lot['message_number'], lot['description'], lot['type'], lot['start_price']))
             self.conn.commit()
             print('\033[92m' + 'Лот внесён в базу' + '\033[0m')
         except:
             print('\033[91m' + 'Запись не добавлена, скорее всего, она уже существует...' + '\033[0m')
 
-    def insert(self, link):
-        self.cursor.execute("INSERT INTO links VALUES (?, ?)", (link, datetime.datetime.now()))
-        self.conn.commit()
-
     def get_lots(self, message_number):
-        self.cursor.execute("SELECT type, description, address, start_price FROM lots WHERE lots.message_number = " + str(message_number))
+        self.cursor.execute(
+            "SELECT type, description, address, start_price FROM lots WHERE lots.message_number = " + str(
+                message_number))
         return self.cursor.fetchall()
 
     def create_web(self):

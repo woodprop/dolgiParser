@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 import re
 import asyncio
+from datetime import datetime
 from pyppeteer import launch
 from db import LinkDB
 
@@ -77,6 +78,11 @@ def main():
 
 # ---------- Подстановка данных для поиска и сбор результатов ----------
 async def get_search_result_page(url, delay):
+    # ------- Сегодняшняя дата -------
+    date = datetime.today().strftime('%d.%m.%Y')
+    # ------- Произвольная дата -------
+    # date = '01.04.2020'
+    # -----------------------------------------------
     browser = await launch()
     page = await browser.newPage()
 
@@ -87,7 +93,7 @@ async def get_search_result_page(url, delay):
     await page.waitFor(delay)
 
     # ---------- Клик на поле ТИП СООБЩЕНИЯ ----------
-    print('Выбор категирии и дат...')
+    print('Выбор категории и дат...')
     await page.click('input[name="ctl00$cphBody$mdsMessageType$tbSelectedText"]')
     await page.waitFor(2000)
 
@@ -104,13 +110,13 @@ async def get_search_result_page(url, delay):
     await page.keyboard.down('Control')
     await page.keyboard.press('KeyA')
     await page.keyboard.up('Control')
-    await page.type('input[id="ctl00_cphBody_cldrBeginDate_tbSelectedDate"]', '01.04.2020')
+    await page.type('input[id="ctl00_cphBody_cldrBeginDate_tbSelectedDate"]', date)
 
     await page.click('input[id="ctl00_cphBody_cldrEndDate_tbSelectedDate"]')
     await page.keyboard.down('Control')
     await page.keyboard.press('KeyA')
     await page.keyboard.up('Control')
-    await page.type('input[id="ctl00_cphBody_cldrEndDate_tbSelectedDate"]', '01.04.2020')
+    await page.type('input[id="ctl00_cphBody_cldrEndDate_tbSelectedDate"]', date)
 
     await page.keyboard.press('Enter')
     print('Поиск...')

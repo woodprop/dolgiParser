@@ -59,7 +59,8 @@ def main():
     print('\033[92m' + 'Внесение должников в базу...' + '\033[0m')
     for i, d in enumerate(debtors):
         # print(d['name'], d['link'])
-        print('\033[92m' + 'Должник ' + str(i + 1) + ' из ' + str(links_count) + '\033[0m')
+        print('\033[92m' + 'Должник ' + str(i + 1) + ' из ' + str(debtors_count) + '\033[0m')
+        print(d['link'])
         d.update(get_debtor_info(d))
         if 'Organization' in d['link']:
             d['type'] = 'company'

@@ -23,7 +23,8 @@ class LinkDB:
             self.cursor.execute("INSERT INTO debtors (name, link, id, type) VALUES (%s, %s, %s, %s)", (debtor['name'], debtor['link'], debtor['inn'], debtor['type']))
             self.conn.commit()
             print('\033[92m' + 'Должник внесён в базу' + '\033[0m')
-        except:
+        except Exception as e:
+            print(e)
             print('\033[91m' + 'Запись не добавлена, скорее всего, она уже существует...' + '\033[0m')
 
     # ---------- Добавление сообщения о торгах в базу ----------
@@ -37,7 +38,8 @@ class LinkDB:
                 # print(lot)
                 if lot['description'] and lot['start_price']:
                     self.add_lot(lot)
-        except:
+        except Exception as e:
+            print(e)
             print('\033[91m' + 'Запись не добавлена, скорее всего, она уже существует...' + '\033[0m')
 
     # ---------- Добавление лота в базу ----------
@@ -47,7 +49,8 @@ class LinkDB:
                             (lot['message_number'], lot['description'], lot['type'], lot['start_price']))
             self.conn.commit()
             print('\033[92m' + 'Лот внесён в базу' + '\033[0m')
-        except:
+        except Exception as e:
+            print(e)
             print('\033[91m' + 'Запись не добавлена, скорее всего, она уже существует...' + '\033[0m')
 
     def get_lots(self, message_number):

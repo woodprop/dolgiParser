@@ -5,21 +5,24 @@ from jinja2 import Template
 
 class LinkDB:
     def __init__(self):
+        self.connect()
+        self.cursor.execute("""CREATE TABLE IF NOT EXISTS debtors (id VARCHAR(16) NOT NULL, name VARCHAR(255), type VARCHAR(16), link VARCHAR(255), PRIMARY KEY (id))""")
+        self.cursor.execute("""CREATE TABLE IF NOT EXISTS messages (id INT PRIMARY KEY AUTO_INCREMENT, inn VARCHAR(16), date_pub VARCHAR(16), message_number VARCHAR(16) UNIQUE, description TEXT, auction_type VARCHAR(32), date_start VARCHAR(16), place VARCHAR(255), link VARCHAR(255))""")
+        self.cursor.execute("""CREATE TABLE IF NOT EXISTS lots (id INT PRIMARY KEY AUTO_INCREMENT, message_number VARCHAR(16), description TEXT, address TINYTEXT, type VARCHAR(16), start_price INT)""")
+
+    def connect(self):
         self.conn = pymysql.connect(host='kkokarev.beget.tech',
                                     user='kkokarev_lottest',
                                     password='EUf9&gwu',
                                     db='kkokarev_lottest',
                                     charset='utf8mb4',
                                     )
-
         self.cursor = self.conn.cursor()
-        self.cursor.execute("""CREATE TABLE IF NOT EXISTS debtors (id VARCHAR(16) NOT NULL, name VARCHAR(255), type VARCHAR(16), link VARCHAR(255), PRIMARY KEY (id))""")
-        self.cursor.execute("""CREATE TABLE IF NOT EXISTS messages (id INT PRIMARY KEY AUTO_INCREMENT, inn VARCHAR(16), date_pub VARCHAR(16), message_number VARCHAR(16) UNIQUE, description TEXT, auction_type VARCHAR(32), date_start VARCHAR(16), place VARCHAR(255), link VARCHAR(255))""")
-        self.cursor.execute("""CREATE TABLE IF NOT EXISTS lots (id INT PRIMARY KEY AUTO_INCREMENT, message_number VARCHAR(16), description TEXT, address TINYTEXT, type VARCHAR(16), start_price INT)""")
 
     # ---------- Добавление должника в базу ----------
     def add_debtor(self, debtor):
         try:
+            self.connect()
             self.cursor.execute("INSERT INTO debtors (name, link, id, type) VALUES (%s, %s, %s, %s)", (debtor['name'], debtor['link'], debtor['inn'], debtor['type']))
             self.conn.commit()
             print('\033[92m' + 'Должник внесён в базу' + '\033[0m')
@@ -30,6 +33,7 @@ class LinkDB:
     # ---------- Добавление сообщения о торгах в базу ----------
     def add_message(self, message):
         try:
+            self.connect()
             self.cursor.execute("INSERT INTO messages (inn, date_pub, message_number, description, auction_type, date_start, place, link) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
                            (message['inn'], message['date_pub'], message['message_number'], message['description'], message['auction_type'], message['date_start'], message['place'], message['link']))
             self.conn.commit()
@@ -45,6 +49,7 @@ class LinkDB:
     # ---------- Добавление лота в базу ----------
     def add_lot(self, lot):
         try:
+            self.connect()
             self.cursor.execute("INSERT INTO lots (message_number, description, type, start_price) VALUES (%s, %s, %s, %s)",
                             (lot['message_number'], lot['description'], lot['type'], lot['start_price']))
             self.conn.commit()
@@ -54,6 +59,7 @@ class LinkDB:
             print('\033[91m' + 'Запись не добавлена, скорее всего, она уже существует...' + '\033[0m')
 
     def get_lots(self, message_number):
+        self.connect()
         self.cursor.execute(
             "SELECT type, description, address, start_price FROM lots WHERE lots.message_number = " + str(
                 message_number))
@@ -61,6 +67,7 @@ class LinkDB:
 
     def create_web(self):
         data = []
+        self.connect()
         self.cursor.execute("SELECT DISTINCT messages.link, messages.description, debtors.name, debtors.link, messages.message_number, messages.date_start, messages.date_pub FROM messages JOIN debtors ON messages.inn = debtors.id")
         res = self.cursor.fetchall()
 

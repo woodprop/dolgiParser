@@ -24,7 +24,7 @@ def disable_timeout_pyppeteer():
 
 
 def main():
-    keywords = ['здание', 'помещение', 'квартира']
+    keywords = ['']
     disable_timeout_pyppeteer()
     html = asyncio.get_event_loop().run_until_complete(get_search_result_page(base_url_mes, 3000))
     # return

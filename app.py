@@ -202,6 +202,12 @@ def get_message_info(link, keywords):
         message_data['auction_type'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(14) > tbody > tr:nth-child(1) > td:nth-child(2)').text.strip()
         message_data['date_start'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(14) > tbody > tr:nth-child(2) > td:nth-child(2)').text.strip()
         try:
+            message_data['date_start'] = datetime.strptime(message_data['date_start'], '%d.%m.%Y %H:%M')
+            message_data['date_pub'] = datetime.strptime(message_data['date_pub'], '%d.%m.%Y')
+        except Exception as e:
+            print(e)
+
+        try:
             message_data['place'] = soup.select_one('#ctl00_BodyPlaceHolder_lblBody > div > table:nth-child(14) > tbody > tr:nth-child(7) > td:nth-child(2)').text.strip()
         except:
             message_data['place'] = ''

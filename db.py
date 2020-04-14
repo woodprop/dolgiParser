@@ -7,7 +7,7 @@ class LinkDB:
     def __init__(self):
         self.connect()
         self.cursor.execute("""CREATE TABLE IF NOT EXISTS debtors (id VARCHAR(16) NOT NULL, name VARCHAR(255), type VARCHAR(16), link VARCHAR(255), PRIMARY KEY (id))""")
-        self.cursor.execute("""CREATE TABLE IF NOT EXISTS messages (id INT PRIMARY KEY AUTO_INCREMENT, inn VARCHAR(16), date_pub VARCHAR(16), message_number VARCHAR(16) UNIQUE, description TEXT, auction_type VARCHAR(32), date_start VARCHAR(16), place VARCHAR(255), link VARCHAR(255))""")
+        self.cursor.execute("""CREATE TABLE IF NOT EXISTS messages (id INT PRIMARY KEY AUTO_INCREMENT, inn VARCHAR(16), date_pub DATETIME, message_number VARCHAR(16) UNIQUE, description TEXT, auction_type VARCHAR(32), date_start DATETIME, place VARCHAR(255), link VARCHAR(255))""")
         self.cursor.execute("""CREATE TABLE IF NOT EXISTS lots (id INT PRIMARY KEY AUTO_INCREMENT, message_number VARCHAR(16), description TEXT, address TINYTEXT, type VARCHAR(16), start_price INT)""")
 
     def connect(self):
